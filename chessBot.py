@@ -32,57 +32,82 @@ driver.implicitly_wait(5) #attendre si on ne trouve pas l'élément
 
 stockfish = Stockfish("stockfish_15_x64_avx2.exe")
 
-#stockfish.set_position(['e2e4', 'e7e5'])
+def INIT():
 
-driver.get('https://www.chess.com/play/online')
+    #stockfish.set_position(['e2e4', 'e7e5'])
 
-time.sleep(1)
+    driver.get('https://www.chess.com/play/online')
 
-bPlay = driver.find_element(By.CSS_SELECTOR, ".ui_v5-button-component.ui_v5-button-primary.ui_v5-button-large.ui_v5-button-full")
-bPlay.click()
+    time.sleep(1)
 
-time.sleep(1)
+    bPlay = driver.find_element(By.CSS_SELECTOR, ".ui_v5-button-component.ui_v5-button-primary.ui_v5-button-large.ui_v5-button-full")
+    bPlay.click()
 
-bAdvanced = driver.find_element(By.XPATH, "//label[4]/div[2]")
-bAdvanced.click()
+    time.sleep(1)
 
-time.sleep(1)
+    bAdvanced = driver.find_element(By.XPATH, "//label[4]/div[2]")
+    bAdvanced.click()
 
-bGuest = driver.find_element(By.ID, "guest-button")
-bGuest.click()
+    time.sleep(1)
 
-# si noir, attendre que l'autre joue
-# tant que !checkmate 
-    # jouer
-    # attendre que l'autre joue
+    bGuest = driver.find_element(By.ID, "guest-button")
+    bGuest.click()
+
+def JOUER_COUP():
+    best_move = stockfish.get_best_move()
+    print("jouer coup : " + best_move)
+
+    #jouer le meilleur coup
+    caseDep = formatCase(best_move[0:2])
+    caseFin = formatCase(best_move[2:4])
+
+    time.sleep(5)
+
+    # case de départ
+    WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#board-single > div.piece.wp.square-" + caseDep))).click()
+    #target = driver.find_element(By.XPATH, "/html/body/div[2]/div[2]/chess-board/div[24]") #fonctionne
+
+    time.sleep(1)
+
+    # case d'arrivée
+    target = driver.find_element(By.CSS_SELECTOR, "#board-single > div.hint.square-" + caseFin)
+    print(target.size)
+    #find_coordinates(caseFin, target.size)
+    action = ActionChains(driver)
+    action.move_to_element_with_offset(target, target.size['height'] // 2, target.size['width'] // 2) #pour bien cliquer bien au centre, ne marche pas sinon
+    action.click()
+    action.perform()
+
+    stockfish.make_moves_from_current_position([best_move])
+
+def ATTENDRE_COUP_ADVERSE():
+    rien = False
+    #1) surveiller une modification du 2ème highlight à intervalle réguliers
+    #2) utiliser la classe du deuxième div highlight pour déterminer la case de départ (XPATH /html/body/div[2]/div[2]/chess-board/div[2])
+    #3) utiliser la classe du troisième div highlight pour déterminer la case de départ (XPATH /html/body/div[2]/div[2]/chess-board/div[3])
+    #4) màj stockfish
+
+# MAIN    
+INIT()
+if True: # si on joue les noirs
+    ATTENDRE_COUP_ADVERSE()
+while True: #tant que !checkmate
+    JOUER_COUP()
+    # print(stockfish.get_board_visual())
+    ATTENDRE_COUP_ADVERSE()
+    
 #garder la fenêtre ouverte
-
-best_move = stockfish.get_best_move()
-print(best_move)
-
-#jouer le meilleur coup
-caseDep = formatCase(best_move[0:2])
-caseFin = formatCase(best_move[2:4])
-
-time.sleep(5)
-
-# case de départ
-WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#board-single > div.piece.wp.square-" + caseDep))).click()
-#target = driver.find_element(By.XPATH, "/html/body/div[2]/div[2]/chess-board/div[24]") #fonctionne
-
-time.sleep(1)
-
-# case d'arrivée
-target = driver.find_element(By.CSS_SELECTOR, "#board-single > div.hint.square-" + caseFin)
-print(target.size)
-#find_coordinates(caseFin, target.size)
-action = ActionChains(driver)
-action.move_to_element_with_offset(target, target.size['height'] // 2, target.size['width'] // 2) #pour bien cliquer bien au centre, ne marche pas sinon
-action.click()
-action.perform()
-
-stockfish.make_moves_from_current_position([best_move])
-# print(stockfish.get_board_visual())
-
-
 time.sleep(10)
+
+
+
+
+
+
+
+
+
+
+
+
+
