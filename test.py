@@ -1,2 +1,2 @@
-targetsize = {'height': 67, 'width': 67}
-print(targetsize['height'] // 2)
+test = "highlight square-54"
+print(test[-2:])

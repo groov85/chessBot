@@ -14,7 +14,7 @@ def formatCase(case):
     else:              
         #format b5 → 25
         fCase = string.ascii_lowercase[int(case[0]) - 1] + case[1:2]
-    print("formatCase : " + case + " → " + fCase)    
+    #print("formatCase : " + case + " → " + fCase)    
     return fCase
 
 from selenium import webdriver
@@ -57,7 +57,6 @@ def JOUER_COUP():
     best_move = stockfish.get_best_move()
     print("jouer coup : " + best_move)
 
-    #jouer le meilleur coup
     caseDep = formatCase(best_move[0:2])
     caseFin = formatCase(best_move[2:4])
 
@@ -81,15 +80,29 @@ def JOUER_COUP():
     stockfish.make_moves_from_current_position([best_move])
 
 def ATTENDRE_COUP_ADVERSE():
-    rien = False
-    #1) surveiller une modification du 2ème highlight à intervalle réguliers
-    #2) utiliser la classe du deuxième div highlight pour déterminer la case de départ (XPATH /html/body/div[2]/div[2]/chess-board/div[2])
-    #3) utiliser la classe du troisième div highlight pour déterminer la case de départ (XPATH /html/body/div[2]/div[2]/chess-board/div[3])
-    #4) màj stockfish
+    onAttend = True
+    classRef = driver.find_element(By.XPATH, "/html/body/div[2]/div[2]/chess-board/div[2]").get_attribute("class") #référence pour comparaison
+
+    print(classRef)
+
+    while onAttend:
+        classNow = driver.find_element(By.XPATH, "/html/body/div[2]/div[2]/chess-board/div[2]").get_attribute("class")
+        print(classNow)
+        if classNow != classRef:
+            onAttend = False
+            break
+        else:
+            time.sleep(1)
+
+    caseDep = formatCase(driver.find_element(By.XPATH, "/html/body/div[2]/div[2]/chess-board/div[2]").get_attribute("class")[-2:])
+    caseFin = formatCase(driver.find_element(By.XPATH, "/html/body/div[2]/div[2]/chess-board/div[3]").get_attribute("class")[-2:])
+    
+    print("villain joue : " + caseDep + caseFin)
+    stockfish.make_moves_from_current_position([caseDep + caseFin])
 
 # MAIN    
 INIT()
-if True: # si on joue les noirs
+if False: # si on joue les noirs
     ATTENDRE_COUP_ADVERSE()
 while True: #tant que !checkmate
     JOUER_COUP()
