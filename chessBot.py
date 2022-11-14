@@ -4,6 +4,21 @@ import selenium
 import time
 import random
 import string
+import re
+
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver.chrome.options import Options
+chrome_options = Options()
+chrome_options.add_experimental_option("detach", True)
+
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 def formatCase(case):
     try:
@@ -16,16 +31,6 @@ def formatCase(case):
         fCase = string.ascii_lowercase[int(case[0]) - 1] + case[1:2]
     #print("formatCase : " + case + " → " + fCase)    
     return fCase
-
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service as ChromeService
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 
 driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
 driver.implicitly_wait(5) #attendre si on ne trouve pas l'élément
@@ -53,6 +58,15 @@ def INIT():
     bGuest = driver.find_element(By.ID, "guest-button")
     bGuest.click()
 
+    time.sleep(5)
+
+    #attendre que le board soit chargé
+    clockWhite = driver.find_element(By.CSS_SELECTOR, "#board-layout-player-top > div > div.clock-component.clock-white.clock-top.clock-live.player-clock > span")
+    timeWhiteSec = int(clockWhite.text[-2:])
+    
+    while timeWhiteSec == 0:
+        time.sleep(1)
+
 def JOUER_COUP():
     best_move = stockfish.get_best_move()
     print("jouer coup : " + best_move)
@@ -60,18 +74,16 @@ def JOUER_COUP():
     caseDep = formatCase(best_move[0:2])
     caseFin = formatCase(best_move[2:4])
 
-    time.sleep(5)
+    time.sleep(1)
 
     # case de départ
-    WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#board-single > div.piece.wp.square-" + caseDep))).click()
-    #target = driver.find_element(By.XPATH, "/html/body/div[2]/div[2]/chess-board/div[24]") #fonctionne
+    WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#board-single > div[class^='piece'][class$='square-" + caseDep + "']"))).click()
 
     time.sleep(1)
 
     # case d'arrivée
-    target = driver.find_element(By.CSS_SELECTOR, "#board-single > div.hint.square-" + caseFin)
-    print(target.size)
-    #find_coordinates(caseFin, target.size)
+    target = driver.find_element(By.CSS_SELECTOR, "#board-single > [class*='hint'][class$='square-" + caseFin + "']")
+    #print(target.size)
     action = ActionChains(driver)
     action.move_to_element_with_offset(target, target.size['height'] // 2, target.size['width'] // 2) #pour bien cliquer bien au centre, ne marche pas sinon
     action.click()
@@ -83,11 +95,8 @@ def ATTENDRE_COUP_ADVERSE():
     onAttend = True
     classRef = driver.find_element(By.XPATH, "/html/body/div[2]/div[2]/chess-board/div[2]").get_attribute("class") #référence pour comparaison
 
-    print(classRef)
-
     while onAttend:
         classNow = driver.find_element(By.XPATH, "/html/body/div[2]/div[2]/chess-board/div[2]").get_attribute("class")
-        print(classNow)
         if classNow != classRef:
             onAttend = False
             break
@@ -102,8 +111,12 @@ def ATTENDRE_COUP_ADVERSE():
 
 # MAIN    
 INIT()
-if False: # si on joue les noirs
+onJoueLesNoirs = re.search("flipped", driver.find_element(By.ID, "board-single").get_attribute("class"))
+if onJoueLesNoirs: 
+    print("noirs")
     ATTENDRE_COUP_ADVERSE()
+else:
+    print("blancs")
 while True: #tant que !checkmate
     JOUER_COUP()
     # print(stockfish.get_board_visual())

@@ -1,2 +1,6 @@
-test = "highlight square-54"
-print(test[-2:])
+import re
+
+test = re.search("flipped","board flipped")
+print(test)
+if test:
+    print("okkk")
