@@ -85,6 +85,8 @@ def JOUER_COUP():
     action.click()
     action.perform()
 
+    time.sleep(1)
+
     if len(best_move) == 5: #promotion
         try:
             driver.find_element(By.CSS_SELECTOR, "#board-single > div.promotion-window.top > div.promotion-piece.w" + best_move[-1:0]).click()
