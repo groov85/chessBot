@@ -36,6 +36,7 @@ driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install())
 driver.implicitly_wait(5) #attendre si on ne trouve pas l'élément
 
 stockfish = Stockfish("stockfish_15_x64_avx2.exe")
+stockfish.set_elo_rating(2000)
 
 def INIT():
 
