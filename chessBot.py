@@ -128,19 +128,20 @@ def ATTENDRE_COUP_ADVERSE(firstLoop = False):
         stockfish.make_moves_from_current_position([caseFin + caseDep])
         print("villain joue : " + caseFin + caseDep)
 
-def checkmate()
+def checkmate():
     return stockfish.get_evaluation() == {'type': 'mate', 'value': 0}
 
 # ----- MAIN -----  
 INIT()
 onJoueLesNoirs = re.search("flipped", driver.find_element(By.ID, "board-single").get_attribute("class"))
-print("onJoueLesNoirs : " + onJoueLesNoirs)
+print("onJoueLesNoirs : " + str(bool(onJoueLesNoirs)))
 
 if onJoueLesNoirs: 
     ATTENDRE_COUP_ADVERSE(firstLoop = True)
 while not checkmate() : 
     JOUER_COUP()
     if checkmate():
-        return
+        break
     ATTENDRE_COUP_ADVERSE()
+    print(stockfish.get_evaluation())
     
