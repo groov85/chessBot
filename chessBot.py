@@ -85,6 +85,12 @@ def JOUER_COUP():
     action.click()
     action.perform()
 
+    if len(best_move) == 5: #promotion
+        try:
+            driver.find_element(By.CSS_SELECTOR, "#board-single > div.promotion-window.top > div.promotion-piece.w" + best_move[-1:0]).click()
+        except:
+            pass
+
     stockfish.make_moves_from_current_position([best_move])
 
 def ATTENDRE_COUP_ADVERSE():
@@ -134,6 +140,7 @@ else:
 while True: #tant que !checkmate
     JOUER_COUP()
     # print(stockfish.get_board_visual())
+    print(stockfish.get_evaluation)
     ATTENDRE_COUP_ADVERSE()
     
 #garder la fenêtre ouverte
