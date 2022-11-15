@@ -59,21 +59,10 @@ def INIT():
     bGuest.click()
 
     #attendre que le board soit chargé
-    time.sleep(5)   
-    clockWhite = driver.find_element(By.CSS_SELECTOR, "div[id^='board-layout-player-'] > div > div.clock-component.clock-white.player-clock > span")
-    clockBlack = driver.find_element(By.CSS_SELECTOR, "div[id^='board-layout-player-'] > div > div.clock-component.clock-black.player-clock > span")
-    
+    WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#board-layout-player-top > div > div.player-tagline > div > div.country-flags-component")))
+    print("lezgonnnngue")
+    time.sleep(1)
 
-    timeWhiteSec = int(clockWhite.text[-2:])
-    timeBlackSec = int(clockBlack.text[-2:])
-
-    print(timeWhiteSec)
-    print(timeBlackSec)
-
-    print("trouvé")
-    while timeWhiteSec == 0 and timeBlackSec == 0:
-        time.sleep(0.1)
-    print("commencé")    
 
 def JOUER_COUP():
     best_move = stockfish.get_best_move()
@@ -100,14 +89,16 @@ def JOUER_COUP():
     stockfish.make_moves_from_current_position([best_move])
 
 def ATTENDRE_COUP_ADVERSE():
+    global firstLoop
     onAttend = True
-    """
+    
     if onJoueLesNoirs and firstLoop:
-        classRef = "element-pool"
+        classRef2 = classRef3 = "element-pool"
+        firstLoop = False
     else:
-        """
-    classRef2 = driver.find_element(By.XPATH, "/html/body/div[2]/div[2]/chess-board/div[2]").get_attribute("class") #référence pour comparaison
-    classRef3 = driver.find_element(By.XPATH, "/html/body/div[2]/div[2]/chess-board/div[3]").get_attribute("class") #référence pour comparaison
+        classRef2 = driver.find_element(By.XPATH, "/html/body/div[2]/div[2]/chess-board/div[2]").get_attribute("class")
+        classRef3 = driver.find_element(By.XPATH, "/html/body/div[2]/div[2]/chess-board/div[3]").get_attribute("class") 
+
     while onAttend:
         classNow2 = driver.find_element(By.XPATH, "/html/body/div[2]/div[2]/chess-board/div[2]").get_attribute("class")
         classNow3 = driver.find_element(By.XPATH, "/html/body/div[2]/div[2]/chess-board/div[3]").get_attribute("class")
@@ -117,8 +108,10 @@ def ATTENDRE_COUP_ADVERSE():
         else:
             time.sleep(1)
 
-    caseDep = formatCase(classNow2[-2:])
-    caseFin = formatCase(classNow3[-2:])
+    time.sleep(1) #debug : laisser le temps de recharger html
+    #expressions explicite pour aller rechercher la valeur, si jamais elle a changé
+    caseDep = formatCase(driver.find_element(By.XPATH, "/html/body/div[2]/div[2]/chess-board/div[2]").get_attribute("class")[-2:])
+    caseFin = formatCase(driver.find_element(By.XPATH, "/html/body/div[2]/div[2]/chess-board/div[3]").get_attribute("class")[-2:])
 
     try:
         stockfish.make_moves_from_current_position([caseDep + caseFin])
@@ -130,12 +123,12 @@ def ATTENDRE_COUP_ADVERSE():
         print("villain joue : " + caseFin + caseDep)
 
 
-
 # MAIN    
 INIT()
 onJoueLesNoirs = re.search("flipped", driver.find_element(By.ID, "board-single").get_attribute("class"))
 if onJoueLesNoirs: 
     print("noirs")
+    firstLoop = True
     ATTENDRE_COUP_ADVERSE()
 else:
     print("blancs")
