@@ -1,4 +1,3 @@
-# from stockfish import Stockfish
 from model.stockfish.models import Stockfish, StockfishException
 import selenium
 import time
@@ -63,7 +62,6 @@ def INIT():
     WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#board-layout-player-top > div > div.player-tagline > div > div.country-flags-component")))
     print("lezgonnnngue")
     time.sleep(1)
-
 
 def JOUER_COUP():
     best_move = stockfish.get_best_move()
