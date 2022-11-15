@@ -58,14 +58,22 @@ def INIT():
     bGuest = driver.find_element(By.ID, "guest-button")
     bGuest.click()
 
-    time.sleep(5)
-
     #attendre que le board soit chargé
-    clockWhite = driver.find_element(By.CSS_SELECTOR, "#board-layout-player-top > div > div.clock-component.clock-white.clock-top.clock-live.player-clock > span")
-    timeWhiteSec = int(clockWhite.text[-2:])
+    time.sleep(5)   
+    clockWhite = driver.find_element(By.CSS_SELECTOR, "div[id^='board-layout-player-'] > div > div.clock-component.clock-white.player-clock > span")
+    clockBlack = driver.find_element(By.CSS_SELECTOR, "div[id^='board-layout-player-'] > div > div.clock-component.clock-black.player-clock > span")
     
-    while timeWhiteSec == 0:
-        time.sleep(1)
+
+    timeWhiteSec = int(clockWhite.text[-2:])
+    timeBlackSec = int(clockBlack.text[-2:])
+
+    print(timeWhiteSec)
+    print(timeBlackSec)
+
+    print("trouvé")
+    while timeWhiteSec == 0 and timeBlackSec == 0:
+        time.sleep(0.1)
+    print("commencé")    
 
 def JOUER_COUP():
     best_move = stockfish.get_best_move()
@@ -93,21 +101,35 @@ def JOUER_COUP():
 
 def ATTENDRE_COUP_ADVERSE():
     onAttend = True
-    classRef = driver.find_element(By.XPATH, "/html/body/div[2]/div[2]/chess-board/div[2]").get_attribute("class") #référence pour comparaison
-
+    """
+    if onJoueLesNoirs and firstLoop:
+        classRef = "element-pool"
+    else:
+        """
+    classRef2 = driver.find_element(By.XPATH, "/html/body/div[2]/div[2]/chess-board/div[2]").get_attribute("class") #référence pour comparaison
+    classRef3 = driver.find_element(By.XPATH, "/html/body/div[2]/div[2]/chess-board/div[3]").get_attribute("class") #référence pour comparaison
     while onAttend:
-        classNow = driver.find_element(By.XPATH, "/html/body/div[2]/div[2]/chess-board/div[2]").get_attribute("class")
-        if classNow != classRef:
+        classNow2 = driver.find_element(By.XPATH, "/html/body/div[2]/div[2]/chess-board/div[2]").get_attribute("class")
+        classNow3 = driver.find_element(By.XPATH, "/html/body/div[2]/div[2]/chess-board/div[3]").get_attribute("class")
+        if classNow2 != classRef2 or classNow3 != classRef3:
             onAttend = False
             break
         else:
             time.sleep(1)
 
-    caseDep = formatCase(driver.find_element(By.XPATH, "/html/body/div[2]/div[2]/chess-board/div[2]").get_attribute("class")[-2:])
-    caseFin = formatCase(driver.find_element(By.XPATH, "/html/body/div[2]/div[2]/chess-board/div[3]").get_attribute("class")[-2:])
-    
-    print("villain joue : " + caseDep + caseFin)
-    stockfish.make_moves_from_current_position([caseDep + caseFin])
+    caseDep = formatCase(classNow2[-2:])
+    caseFin = formatCase(classNow3[-2:])
+
+    try:
+        stockfish.make_moves_from_current_position([caseDep + caseFin])
+        print("villain joue : " + caseDep + caseFin)
+
+    except ValueError:
+        #parfois, les highlights ne sont pas alimentés dans le bon sens...
+        stockfish.make_moves_from_current_position([caseFin + caseDep])
+        print("villain joue : " + caseFin + caseDep)
+
+
 
 # MAIN    
 INIT()
