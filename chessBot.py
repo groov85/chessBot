@@ -64,6 +64,8 @@ def INIT():
     time.sleep(1)
 
 def JOUER_COUP():
+    global classRef2, classRef3
+
     best_move = stockfish.get_best_move()
     print("jouer coup : " + best_move)
 
@@ -85,6 +87,9 @@ def JOUER_COUP():
     action.click()
     action.perform()
 
+    classRef2 = driver.find_element(By.XPATH, "/html/body/div[2]/div[2]/chess-board/div[2]").get_attribute("class")
+    classRef3 = driver.find_element(By.XPATH, "/html/body/div[2]/div[2]/chess-board/div[3]").get_attribute("class") 
+
     time.sleep(1)
 
     if len(best_move) == 5: #promotion
@@ -96,16 +101,12 @@ def JOUER_COUP():
     stockfish.make_moves_from_current_position([best_move])
 
 def ATTENDRE_COUP_ADVERSE(firstLoop = False):
-    global onJoueLesNoirs
+    global onJoueLesNoirs, classRef2, classRef3
     onAttend = True
     
     if onJoueLesNoirs and firstLoop:
         classRef2 = classRef3 = "element-pool"
         firstLoop = False
-    else:
-        classRef2 = driver.find_element(By.XPATH, "/html/body/div[2]/div[2]/chess-board/div[2]").get_attribute("class")
-        classRef3 = driver.find_element(By.XPATH, "/html/body/div[2]/div[2]/chess-board/div[3]").get_attribute("class") 
-
     while onAttend:
         classNow2 = driver.find_element(By.XPATH, "/html/body/div[2]/div[2]/chess-board/div[2]").get_attribute("class")
         classNow3 = driver.find_element(By.XPATH, "/html/body/div[2]/div[2]/chess-board/div[3]").get_attribute("class")
@@ -130,7 +131,10 @@ def ATTENDRE_COUP_ADVERSE(firstLoop = False):
         print("villain joue : " + caseFin + caseDep)
 
 def checkmate():
-    return stockfish.get_evaluation() == {'type': 'mate', 'value': 0}
+    checkmate = stockfish.get_evaluation() == {'type': 'mate', 'value': 0}
+    if checkmate:
+        print("checkmate")
+    return checkmate
 
 def onJouelesNoirs():
     onJoueLesNoirs = bool(re.search("flipped", driver.find_element(By.ID, "board-single").get_attribute("class")))
@@ -143,9 +147,9 @@ onJoueLesNoirs = onJouelesNoirs()
 if onJoueLesNoirs: 
     ATTENDRE_COUP_ADVERSE(firstLoop = True)
 while not checkmate() : 
+    print(stockfish.get_evaluation())
     JOUER_COUP()
     if checkmate():
         break
     ATTENDRE_COUP_ADVERSE()
-    print(stockfish.get_evaluation())
     
