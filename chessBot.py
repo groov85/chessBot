@@ -149,7 +149,7 @@ if onJoueLesNoirs:
 while not checkmate() : 
     print(stockfish.get_evaluation())
     JOUER_COUP()
-    if checkmate():
-        break
+    #if checkmate():
+    #    break
     ATTENDRE_COUP_ADVERSE()
     
